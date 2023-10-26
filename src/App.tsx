@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react"
-import { BehaviorSubject, debounce, distinctUntilChanged, of, timer } from "rxjs"
+import { BehaviorSubject, debounce, distinctUntilChanged, of, switchMap, timer } from "rxjs"
 
 // 产生 4000 2000 1000 4000 ...
 const random2 = (function () {
@@ -43,11 +43,15 @@ function SearchBox() {
             return timer(500) // 等待 500ms
           }
         }),
-        distinctUntilChanged()
+        distinctUntilChanged(),
+        // 网络请求的实现 -----------------------------
+        switchMap((input) => {
+          return request(input) // 取最新结果
+        })
       )
       .subscribe((v) => {
         console.log("sedationh 1", v)
-        setResult(v)
+        setResult(v.data)
       })
     return () => {
       subscription.unsubscribe()
