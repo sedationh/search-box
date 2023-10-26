@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react"
-import { BehaviorSubject } from "rxjs"
+import { BehaviorSubject, debounce, distinctUntilChanged, of, timer } from "rxjs"
 
 // 产生 4000 2000 1000 4000 ...
 const random2 = (function () {
@@ -33,12 +33,22 @@ function SearchBox() {
     input$.next(e.target.value)
   }
   useEffect(() => {
-    // 订阅这个流
-    const subscription = input$.subscribe((v) => {
-      setResult(v)
-    })
+    const subscription = input$
+      .pipe(
+        // 防抖的实现 -----------------------------
+        debounce((input) => {
+          if (input.length === 0) {
+            return of(null) // 立即响应
+          } else {
+            return timer(500) // 等待 500ms
+          }
+        })
+      )
+      .subscribe((v) => {
+        console.log("sedationh 1", v)
+        setResult(v)
+      })
     return () => {
-      // 组件卸载时取消订阅
       subscription.unsubscribe()
     }
   }, [])
