@@ -1,14 +1,15 @@
-import { useState } from "react"
+import { useRef, useState } from "react"
 
-// 产生 1000 - 5000 的随机数
-function random() {
-  const min = 1000
-  const max = 5000
-  const randomNumber = Math.floor(Math.random() * (max - min)) + min
-  return randomNumber
-}
+// 产生 4000 2000 1000 4000 ...
+const random2 = (function () {
+  let i = 1
 
-console.log("sedationh random", random())
+  const array = [4000, 2000, 1000]
+
+  return () => {
+    return array[i++ % array.length]
+  }
+})()
 
 function request(value) {
   return new Promise<{
@@ -18,16 +19,22 @@ function request(value) {
       resolve({
         data: value,
       })
-    }, random())
+    }, random2())
   })
 }
 
 function SearchBox() {
   const [result, setResult] = useState("")
+  const latestRequestTimeRef = useRef(0)
   const handleInput = (e) => {
     const value = e.target.value
+    const requestTime = Date.now() // 记录时间
+    latestRequestTimeRef.current = requestTime
     request(value).then((response) => {
-      setResult(response.data)
+      if (requestTime >= latestRequestTimeRef.current) {
+        // 对比时间
+        setResult(response.data)
+      }
     })
   }
   return (
