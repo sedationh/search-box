@@ -42,7 +42,8 @@ function SearchBox() {
           } else {
             return timer(500) // 等待 500ms
           }
-        })
+        }),
+        distinctUntilChanged()
       )
       .subscribe((v) => {
         console.log("sedationh 1", v)
