@@ -1,4 +1,5 @@
-import { useRef, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
+import { BehaviorSubject } from "rxjs"
 
 // 产生 4000 2000 1000 4000 ...
 const random2 = (function () {
@@ -25,18 +26,23 @@ function request(value) {
 
 function SearchBox() {
   const [result, setResult] = useState("")
-  const latestRequestTimeRef = useRef(0)
+  // 下面的 BehaviorSubject 和 Subject 一模一样，除了有一个初始值会在订阅时立刻发出
+  const input$ = useMemo(() => new BehaviorSubject(""), [])
+  // 输入内容时向流发送值
   const handleInput = (e) => {
-    const value = e.target.value
-    const requestTime = Date.now() // 记录时间
-    latestRequestTimeRef.current = requestTime
-    request(value).then((response) => {
-      if (requestTime >= latestRequestTimeRef.current) {
-        // 对比时间
-        setResult(response.data)
-      }
-    })
+    input$.next(e.target.value)
   }
+  useEffect(() => {
+    // 订阅这个流
+    const subscription = input$.subscribe((v) => {
+      setResult(v)
+    })
+    return () => {
+      // 组件卸载时取消订阅
+      subscription.unsubscribe()
+    }
+  }, [])
+
   return (
     <>
       <input onChange={handleInput} />
